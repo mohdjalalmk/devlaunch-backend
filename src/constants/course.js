@@ -1,0 +1,1 @@
+export const COURSE_FIELDS = 'title description category thumbnail isFree price isPublished'
