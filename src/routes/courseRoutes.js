@@ -20,9 +20,15 @@ router.post("/", userAuth, checkAdmin,  uploadImage.single("thumbnail"), createC
 
 router.get("/", getAllCourses);
 
-router.patch("/:id", userAuth, checkAdmin, updateCourse);
+router.patch(
+  "/:id",
+  userAuth,
+  checkAdmin,
+  uploadImage.single("thumbnail"),
+  updateCourse
+);
 
-router.get("/:id", getCourseById);
+router.get("/:id", userAuth, getCourseById);
 
 router.delete("/:id", userAuth, checkAdmin, deleteCourse);
 

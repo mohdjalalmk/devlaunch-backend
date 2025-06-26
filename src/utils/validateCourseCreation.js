@@ -20,23 +20,20 @@ function validateCourseInput({ title, description, isFree, price }) {
 
 function validateCourseUpdate({ title, description, isFree, price }) {
   if (title && title.trim().length < 3) {
-    throw new Error('Title must be at least 3 characters long.');
+    throw new Error("Title must be at least 3 characters long.");
   }
 
   if (description && description.trim().length < 10) {
-    throw new Error('Description must be at least 10 characters long.');
+    throw new Error("Description must be at least 10 characters long.");
   }
 
-  const isFreeDefined = typeof isFree !== 'undefined';
-  const priceDefined = typeof price !== 'undefined';
-  const finalIsFree = isFree ?? true;
-
-  if ((isFreeDefined || priceDefined) && !finalIsFree && (!priceDefined || typeof price !== 'number' || price <= 0)) {
-    throw new Error('Paid courses must have a valid positive price.');
+  // Validate based on isFree
+  if (isFree === true && price !== 0) {
+    throw new Error("Free courses must have a price of 0.");
   }
 
-  if ((isFreeDefined || priceDefined) && finalIsFree && priceDefined && price !== 0) {
-    throw new Error('Free courses should not have a price.');
+  if (isFree === false && (typeof price !== "number" || price <= 0)) {
+    throw new Error("Paid courses must have a valid price greater than 0.");
   }
 }
 

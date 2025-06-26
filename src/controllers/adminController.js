@@ -17,7 +17,7 @@ const getAdminStats = async (req, res) => {
     const totalCourses = await Course.countDocuments();
 
     // 2. Enrollment stats per course
-    const courses = await Course.find().select("_id title");
+    const courses = await Course.find().select("_id title isPublished");
 
     const enrollmentStats = await Promise.all(
       courses.map(async (course) => {
@@ -47,6 +47,7 @@ const avgProgress =
     : 0
 
         return {
+          isPublished: course.isPublished,
           courseId: course._id,
           title: course.title,
           totalEnrolled,
@@ -65,7 +66,6 @@ const avgProgress =
   }
 };
 
-//TODO: Add pagination
 const getAllUsers = async (req, res) => {
   try {
     const { search } = req.query;
@@ -74,7 +74,7 @@ const getAllUsers = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const query = {};
+    let query = {};
 
     if (search) {
       const regex = new RegExp(search, "i"); // case-insensitive
