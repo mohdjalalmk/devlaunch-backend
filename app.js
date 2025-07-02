@@ -8,9 +8,10 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: "http://localhost:5173", // allow frontend origin
+    origin: ["http://localhost:5173", "http://localhost:5174"],
   })
 );
+
 
 // Import Routes
 const authRoutes = require('./src/routes/authRoutes');
