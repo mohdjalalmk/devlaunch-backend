@@ -16,7 +16,7 @@ router.get("/me/courses", userAuth, getMyCourses);
 
 router.post("/courses/enroll/:id", userAuth, enrollInCourse);
 
-router.patch("/me/courses/:id/progress/:progress", userAuth, updateProgress);
+router.patch("/me/courses/:id/", userAuth, updateProgress);
 
 router.get("/me/courses/:id/progress", userAuth, getCourseProgress);
 

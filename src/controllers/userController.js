@@ -90,17 +90,25 @@ const enrollInCourse = async (req, res) => {
 };
 
 const updateProgress = async (req, res) => {
-  const userId = req.user._id;
+  const user = req.user;
   const courseId = req.params.id;
-  const progress = req.params.progress;
+  const videoKey = req.query.videoKey;
 
-  if (!validator.isNumeric(progress)) {
-    return res.status(400).json({ message: "Invalid progress value" });
-  }
   if (!mongoose.Types.ObjectId.isValid(courseId)) {
     return res.status(400).json({ message: "Invalid course ID" });
   }
-  const user = await User.findById(userId);
+
+  // Find course to get total number of videos
+  const course = await Course.findById(courseId);
+  if (!course) {
+    return res.status(404).json({ message: "Course not found" });
+  }
+
+  const totalVideos = course.videos.length;
+  if (totalVideos === 0) {
+    return res.status(400).json({ message: "Course has no videos" });
+  }
+
   const courseEntry = user.enrolledCourses.find((course) =>
     course.courseId.equals(courseId)
   );
@@ -111,11 +119,26 @@ const updateProgress = async (req, res) => {
     });
   }
 
-  courseEntry.progress = progress;
+  // Check if videoKey already exists
+  const alreadyCompleted = courseEntry.completedVideos.some(
+    (v) => v.key === videoKey
+  );
+
+  if (!alreadyCompleted) {
+    // Add to completedVideos
+    courseEntry.completedVideos.push({ key: videoKey });
+  } else {
+    courseEntry.completedVideos.pop({ key: videoKey });
+  }
+
+  // Recalculate progress
+  const completedCount = courseEntry.completedVideos.length;
+  courseEntry.progress = Math.round((completedCount / totalVideos) * 100);
+
   await user.save();
   res.status(200).json({
     message: "Progress updated succesfully",
-    data: { progress: courseEntry.progress },
+    data: { progress: courseEntry.progress, completedVideos:courseEntry.completedVideos},
   });
 };
 
@@ -128,8 +151,10 @@ const getCourseProgress = async (req, res) => {
       return res.status(400).json({ message: "Invalid course ID" });
     }
 
+    // Find the user
     const user = await User.findById(userId);
 
+    // Find the enrolled course entry
     const courseEntry = user.enrolledCourses.find((entry) =>
       entry.courseId.equals(courseId)
     );
@@ -140,17 +165,29 @@ const getCourseProgress = async (req, res) => {
         .json({ message: "Course not found in your enrolled list" });
     }
 
-    const progress = courseEntry.progress || 0;
+    // Find course to get total number of videos
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    // Completed videos from user document
+    const completedVideos = courseEntry.completedVideos || [];
+
+    // progress percentage
+    let progress = courseEntry.progress || 0;
 
     res.status(200).json({
       courseId,
-      progress, // Map of videoId: true/false
+      progress, // number: percentage completed
+      completedVideos, // array: video keys user completed
     });
   } catch (err) {
     console.error("Failed to get progress:", err.message);
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 module.exports = {
   getCurrentUser,
