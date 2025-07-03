@@ -9,7 +9,7 @@ const BUCKET_NAME = "devlaunch-videos";
 
 const uploadVideo = async (req, res) => {
   try {
-    const { title, duration } = req.body;
+    const { title, duration,description } = req.body;
     const { id: courseId } = req.params;
     const file = req.file;
 
@@ -45,6 +45,7 @@ const uploadVideo = async (req, res) => {
 
     course.videos.push({
       title,
+      description,
       key, // store key, not full URL
       duration: Number(duration),
     });

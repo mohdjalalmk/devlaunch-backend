@@ -37,6 +37,7 @@ const courseSchema = new mongoose.Schema(
     videos: [
       {
         title: { type: String, required: true },
+        description: { type: String },
         key: { type: String, required: true },
         duration: { type: Number }, // in seconds or minutes
         _id: false,

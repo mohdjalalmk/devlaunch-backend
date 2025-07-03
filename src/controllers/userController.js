@@ -128,7 +128,9 @@ const updateProgress = async (req, res) => {
     // Add to completedVideos
     courseEntry.completedVideos.push({ key: videoKey });
   } else {
-    courseEntry.completedVideos.pop({ key: videoKey });
+      courseEntry.completedVideos = courseEntry.completedVideos.filter(
+        (v) => v.key !== videoKey
+      );
   }
 
   // Recalculate progress
