@@ -12,11 +12,19 @@ const {
 const {
   uploadVideo,
   getSignedVideoUrl,
-  deleteVideo
+  deleteVideo,
 } = require("../controllers/videoController");
-const { uploadVideo: upload,uploadImage } = require("../middlewares/upload");
+const { uploadVideo: upload, uploadImage } = require("../middlewares/upload");
+const { generateCertificate } = require("../controllers/certificateController");
+
 // Admin-only: Create course
-router.post("/", userAuth, checkAdmin,  uploadImage.single("thumbnail"), createCourse);
+router.post(
+  "/",
+  userAuth,
+  checkAdmin,
+  uploadImage.single("thumbnail"),
+  createCourse
+);
 
 router.get("/", getAllCourses);
 
@@ -42,12 +50,8 @@ router.post(
 
 router.get("/:id/videos/signed-url", userAuth, getSignedVideoUrl);
 
-router.delete(
-  "/:id/videos",
-  userAuth,
-  checkAdmin,
-  deleteVideo
-);
+router.delete("/:id/videos", userAuth, checkAdmin, deleteVideo);
 
+router.post("/:id/generate-certificate", userAuth, generateCertificate);
 
 module.exports = router;
