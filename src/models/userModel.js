@@ -42,6 +42,7 @@ const userSchema = new mongoose.Schema(
             key: String,
           },
         ],
+        certificate: { type: String },
       },
     ],
   },
