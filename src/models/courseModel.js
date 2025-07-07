@@ -39,17 +39,20 @@ const courseSchema = new mongoose.Schema(
         title: { type: String, required: true },
         description: { type: String },
         key: { type: String, required: true },
-        duration: { type: Number }, // in seconds or minutes
+        duration: { type: Number }, 
         _id: false,
       },
     ],
     thumbnail: {
-      type: String, // URL to the image
+      type: String, 
     },
     isPublished: {
       type: Boolean,
       default: false,
     },
+    totalEnrollments: { type: Number, default: 0 },
+    totalProgressSum: { type: Number, default: 0 },
+    avgProgress: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
