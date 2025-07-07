@@ -7,11 +7,22 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 require('dotenv').config();
+
+const allowedOrigins = process.env.CORS_ORIGINS?.split(",") || [];
+
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"],
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true
   })
 );
+
 
 // Import Routes
 const authRoutes = require('./src/routes/authRoutes');
