@@ -7,7 +7,7 @@ const Course = require("../models/courseModel.js");
 
 const generateCertificate = async (req, res) => {
   try {
-    const user = req.user; // req.user should have _id and name
+    const user = req.user;
     const courseId = req.params.id;
 
     const course = await Course.findById(courseId);
@@ -40,7 +40,7 @@ const generateCertificate = async (req, res) => {
       courseTitle: course.title,
     });
 
-    // Upload to S3 — get the S3 Key (e.g. certificates/userId/courseId_uuid.pdf)
+    // Upload to S3 — get the S3 Key
     const s3Key = await uploadCertificateToS3(pdfBuffer, user._id, courseId);
 
     // Save only the key in DB
@@ -52,7 +52,6 @@ const generateCertificate = async (req, res) => {
 
     res.status(200).json({ certificateUrl: signedUrl });
   } catch (error) {
-    console.error("Certificate generation failed:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };

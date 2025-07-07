@@ -9,7 +9,6 @@ const {
 } = require("../controllers/userController");
 const { userAuth } = require("../middlewares/userAuth");
 
-// GET /api/users/me
 router.get("/me", userAuth, getCurrentUser);
 
 router.get("/me/courses", userAuth, getMyCourses);
