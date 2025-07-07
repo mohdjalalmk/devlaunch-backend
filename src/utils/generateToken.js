@@ -1,10 +1,7 @@
 const jwt = require('jsonwebtoken');
 
-
-const JWT_SECRET = "dev-luanch-secret"
-
 const generateToken = (userId) => {
-  return jwt.sign({ userId }, JWT_SECRET, {
+  return jwt.sign({ userId }, process.env.JWT_SECRET, {
     expiresIn: '1d',
   });
 };

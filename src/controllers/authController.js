@@ -3,7 +3,6 @@ const bcrypt = require("bcrypt");
 const { validateSignUpData } = require("../utils/validateSignUpData");
 const { validateLoginData } = require("../utils/validateLoginData");
 const { generateToken } = require("../utils/generateToken");
-// controllers/authController.js (or similar)
 const TokenBlacklist = require('../models/tokenBlacklistModel');
 const jwt = require('jsonwebtoken');
 const Otp = require("../models/otp");
@@ -28,7 +27,6 @@ const logoutUser = async (req, res) => {
 
     return res.status(200).json({ message: "Logout successful" });
   } catch (err) {
-    console.error("Logout error:", err.message);
     res.status(500).json({ message: "Logout failed" });
   }
 };
@@ -69,7 +67,6 @@ const loginUser = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Login Error:", err.message);
     res.status(400).json({ message: err.message });
   }
 };
@@ -95,16 +92,12 @@ const sendOtp = async (req, res) => {
       code: otp,
       expiresAt: Date.now() + 5 * 60 * 1000,
       name: name.trim(),
-      password, // ⚠ you could hash here or store temporarily, safer to hash later
+      password,
     });
 
     const resp = await sendOtpEmail(email, otp);
-
-    console.log(resp);
-
     res.json({ message: "OTP sent successfully" });
   } catch (err) {
-    console.error("Send OTP error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -137,7 +130,6 @@ const verifyOtp = async (req, res) => {
     // Clean up OTPs
     await Otp.deleteMany({ email: email.toLowerCase().trim() });
 
-    // Generate JWT token
     const token = generateToken(user._id);
 
     // Respond with token & user info
@@ -152,7 +144,6 @@ const verifyOtp = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Verify OTP error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };

@@ -2,13 +2,12 @@ const { s3, PutObjectCommand, GetObjectCommand } = require("./s3Client");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const { v4: uuidv4 } = require("uuid");
 
-const BUCKET_NAME = "devlaunch-certificate"
 
 const uploadCertificateToS3 = async (buffer, userId, courseId) => {
   const fileName = `certificates/${userId}/${courseId}_${uuidv4()}.pdf`;
 
   const command = new PutObjectCommand({
-    Bucket: BUCKET_NAME,
+    Bucket: process.env.CERTIFICATE_BUCKET_NAME,
     Key: fileName,
     Body: buffer,
     ContentType: 'application/pdf',
@@ -21,7 +20,7 @@ const uploadCertificateToS3 = async (buffer, userId, courseId) => {
 
 const generateSignedUrl = async (fileKey) => {
   const command = new GetObjectCommand({
-    Bucket: BUCKET_NAME,
+    Bucket: process.env.CERTIFICATE_BUCKET_NAME,
     Key: fileKey,
   });
 

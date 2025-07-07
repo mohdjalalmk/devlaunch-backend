@@ -1,8 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 
-const JWT_SECRET = "dev-luanch-secret";
-
 const TokenBlacklist = require('../models/tokenBlacklistModel');
 
 const userAuth = async (req, res, next) => {
@@ -21,7 +19,7 @@ const userAuth = async (req, res, next) => {
       return res.status(401).json({ message: "Unauthorized: Token blacklisted" });
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.userId).select("-passwordHash");
 
     if (!user) {
@@ -31,7 +29,6 @@ const userAuth = async (req, res, next) => {
     req.user = user;
     next();
   } catch (err) {
-    console.error("Token verification failed:", err.message);
     return res.status(401).json({ message: "Unauthorized: Invalid token" });
   }
 };

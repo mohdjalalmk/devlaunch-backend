@@ -3,8 +3,8 @@ const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = re
 const s3 = new S3Client({
   region: 'ap-south-1',
   credentials: {
-    accessKeyId: "AKIAQJHF2UUNP4UGNZ7G",
-    secretAccessKey: "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",
+    accessKeyId: process.env.AWS_ACCESS_KEY,
+    secretAccessKey: process.env.AWS_SECRET_KEY,
   },
 });
 

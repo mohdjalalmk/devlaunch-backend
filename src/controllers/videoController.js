@@ -3,9 +3,6 @@ const Course = require("../models/courseModel");
 const { v4: uuidv4 } = require("uuid");
 const { GetObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
-const User = require("../models/userModel");
-
-const BUCKET_NAME = "devlaunch-videos";
 
 const uploadVideo = async (req, res) => {
   try {
@@ -33,7 +30,7 @@ const uploadVideo = async (req, res) => {
 
     // Upload to S3
     const command = new PutObjectCommand({
-      Bucket: BUCKET_NAME,
+      Bucket: process.env.VIDEOS_BUCKET_NAME,
       Key: key,
       Body: file.buffer,
       ContentType: file.mimetype,
@@ -54,7 +51,6 @@ const uploadVideo = async (req, res) => {
 
     res.status(200).json({ message: "Video uploaded successfully", key });
   } catch (err) {
-    console.error("Upload error:", err.message);
     res.status(500).json({ message: "Upload failed" });
   }
 };
@@ -75,7 +71,7 @@ const getSignedVideoUrl = async (req, res) => {
     }
 
     const command = new GetObjectCommand({
-      Bucket: BUCKET_NAME,
+      Bucket: process.env.VIDEOS_BUCKET_NAME,
       Key: key,
     });
 
@@ -85,7 +81,6 @@ const getSignedVideoUrl = async (req, res) => {
 
     res.json({ url: signedUrl });
   } catch (err) {
-    console.error("Signed URL error:", err.message);
     res.status(500).json({ message: "Could not generate signed URL" });
   }
 };
@@ -118,7 +113,7 @@ const deleteVideo = async (req, res) => {
 
     // Remove video from S3
     const command = new DeleteObjectCommand({
-      Bucket: BUCKET_NAME,
+      Bucket: process.env.VIDEOS_BUCKET_NAME,
       Key: videoKey,
     });
     await s3.send(command);
@@ -129,7 +124,6 @@ const deleteVideo = async (req, res) => {
 
     res.status(200).json({ message: "Video deleted successfully" });
   } catch (err) {
-    console.error("Delete error:", err.message);
     res.status(500).json({ message: "Failed to delete video" });
   }
 };

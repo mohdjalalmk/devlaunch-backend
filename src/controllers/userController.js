@@ -2,11 +2,9 @@ const { COURSE_FIELDS } = require("../constants/course");
 const User = require("../models/userModel");
 const Course = require("../models/courseModel");
 const mongoose = require("mongoose");
-const validator = require("validator");
 
 const getCurrentUser = (req, res) => {
   try {
-    // `req.user` was attached by verifyToken middleware
     const user = req.user;
 
     res.status(200).json({
@@ -14,7 +12,6 @@ const getCurrentUser = (req, res) => {
       user,
     });
   } catch (err) {
-    console.error("Error in /me:", err.message);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -38,7 +35,6 @@ const getMyCourses = async (req, res) => {
       enrolledCourses: user.enrolledCourses,
     });
   } catch (err) {
-    console.error("Failed to fetch enrolled courses:", err.message);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -86,7 +82,6 @@ const enrollInCourse = async (req, res) => {
 
     res.status(200).json({ message: "Successfully enrolled in the course" });
   } catch (err) {
-    console.error("Enrollment failed:", err.message);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -157,7 +152,6 @@ const updateProgress = async (req, res) => {
       data: { progress: courseEntry.progress, completedVideos: courseEntry.completedVideos },
     });
   } catch (err) {
-    console.error("Update progress failed:", err.message);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -200,11 +194,10 @@ const getCourseProgress = async (req, res) => {
 
     res.status(200).json({
       courseId,
-      progress, // number: percentage completed
-      completedVideos, // array: video keys user completed
+      progress, 
+      completedVideos, 
     });
   } catch (err) {
-    console.error("Failed to get progress:", err.message);
     res.status(500).json({ message: "Server error" });
   }
 };

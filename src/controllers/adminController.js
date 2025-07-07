@@ -17,7 +17,6 @@ const getAdminStats = async (req, res) => {
       })),
     });
   } catch (err) {
-    console.error("Admin stats error:", err.message);
     res.status(500).json({ message: "Could not fetch stats" });
   }
 };
@@ -44,7 +43,6 @@ const getAllUsers = async (req, res) => {
 
     res.status(200).json({ users });
   } catch (err) {
-    console.error("Get Users Error:", err.message);
     res.status(500).json({ message: "Failed to fetch users" });
   }
 };
@@ -78,7 +76,6 @@ const getAllCoursesForAdmin = async (req, res) => {
       totalCourses: total,
     });
   } catch (err) {
-    console.error("Admin course fetch error:", err.message);
     res.status(500).json({ message: "Failed to fetch courses" });
   }
 };
