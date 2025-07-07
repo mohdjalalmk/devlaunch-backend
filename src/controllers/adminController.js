@@ -1,64 +1,20 @@
 const Course = require("../models/courseModel");
 const User = require("../models/userModel");
 
-
-//TODO: Maintain aggregated stats inside each Course document, like:
-// {
-//   _id: "...",
-//   title: "React Course",
-//   totalEnrollments: 3200,
-//   avgProgress: 54.2
-// }
-// Update these values on enrollments or progress updates
-
 const getAdminStats = async (req, res) => {
   try {
-    // 1. Total courses
-    const totalCourses = await Course.countDocuments();
-
-    // 2. Enrollment stats per course
-    const courses = await Course.find().select("_id title isPublished");
-
-    const enrollmentStats = await Promise.all(
-      courses.map(async (course) => {
-        const enrolledUsers = await User.find({
-          "enrolledCourses.courseId": course._id,
-        }).select("enrolledCourses");
-console.log("enrolled users:", JSON.stringify(enrolledUsers));
-
-const totalEnrolled = enrolledUsers.length;
-
-// Calculate average progress (if any)
-let totalProgressSum = 0;
-let totalUsersWithProgress = 0;
-
-for (const user of enrolledUsers) {
-  const enrolledCourse = user.enrolledCourses.find((c) =>
-    c.courseId.equals(course._id)
-  );
-  if (enrolledCourse && typeof enrolledCourse.progress === "number") {
-    totalProgressSum += enrolledCourse.progress;
-    totalUsersWithProgress++;
-  }
-}
-const avgProgress =
-  totalUsersWithProgress > 0
-    ? totalProgressSum / totalUsersWithProgress
-    : 0
-
-        return {
-          isPublished: course.isPublished,
-          courseId: course._id,
-          title: course.title,
-          totalEnrolled,
-          avgProgress: Number(avgProgress.toFixed(2)), // %
-        };
-      })
+    const courses = await Course.find().select(
+      "_id title isPublished totalEnrollments avgProgress"
     );
-
-    res.status(200).json({
-      totalCourses,
-      enrollmentStats,
+    res.json({
+      totalCourses: courses.length,
+      enrollmentStats: courses.map((course) => ({
+        courseId: course._id,
+        title: course.title,
+        isPublished: course.isPublished,
+        totalEnrolled: course.totalEnrollments,
+        avgProgress: course.avgProgress,
+      })),
     });
   } catch (err) {
     console.error("Admin stats error:", err.message);
@@ -78,13 +34,13 @@ const getAllUsers = async (req, res) => {
 
     if (search) {
       const regex = new RegExp(search, "i"); // case-insensitive
-      query = { name: regex }
+      query = { name: regex };
     }
 
-    const users = await User.find(query).select("-passwordHash")
-    .skip(skip)
-    .limit(limit);
-
+    const users = await User.find(query)
+      .select("-passwordHash")
+      .skip(skip)
+      .limit(limit);
 
     res.status(200).json({ users });
   } catch (err) {
@@ -127,4 +83,4 @@ const getAllCoursesForAdmin = async (req, res) => {
   }
 };
 
-module.exports = { getAdminStats,getAllUsers,getAllCoursesForAdmin };
+module.exports = { getAdminStats, getAllUsers, getAllCoursesForAdmin };

@@ -57,27 +57,29 @@ const enrollInCourse = async (req, res) => {
       return res.status(404).json({ message: "Course not found" });
     }
 
-    // Prevent enrolling if not published
     if (!course.isPublished) {
       return res.status(403).json({ message: "Course is not published yet" });
     }
 
     const user = await User.findById(userId);
-
-    const alreadyEnrolled = user.enrolledCourses.some((enrolledCourses) => {
-      return enrolledCourses.courseId.equals(courseId);
-    });
+    const alreadyEnrolled = user.enrolledCourses.some((c) =>
+      c.courseId.equals(courseId)
+    );
     if (alreadyEnrolled) {
       return res
         .status(400)
         .json({ message: "You are already enrolled in this course" });
     }
 
-    // Optional: If course is paid, validate payment here (e.g., check `req.body.paymentStatus`)
+    // Update aggregated fields
+    await Course.findByIdAndUpdate(courseId, {
+      $inc: { totalEnrollments: 1 },
+    });
 
     user.enrolledCourses.push({
       courseId,
       progress: 0,
+      completedVideos: [],
     });
 
     await user.save();
@@ -89,60 +91,77 @@ const enrollInCourse = async (req, res) => {
   }
 };
 
+
 const updateProgress = async (req, res) => {
-  const user = req.user;
-  const courseId = req.params.id;
-  const videoKey = req.query.videoKey;
+  try {
+    const user = req.user;
+    const courseId = req.params.id;
+    const videoKey = req.query.videoKey;
 
-  if (!mongoose.Types.ObjectId.isValid(courseId)) {
-    return res.status(400).json({ message: "Invalid course ID" });
-  }
+    if (!mongoose.Types.ObjectId.isValid(courseId)) {
+      return res.status(400).json({ message: "Invalid course ID" });
+    }
 
-  // Find course to get total number of videos
-  const course = await Course.findById(courseId);
-  if (!course) {
-    return res.status(404).json({ message: "Course not found" });
-  }
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
 
-  const totalVideos = course.videos.length;
-  if (totalVideos === 0) {
-    return res.status(400).json({ message: "Course has no videos" });
-  }
+    const totalVideos = course.videos.length;
+    if (totalVideos === 0) {
+      return res.status(400).json({ message: "Course has no videos" });
+    }
 
-  const courseEntry = user.enrolledCourses.find((course) =>
-    course.courseId.equals(courseId)
-  );
+    const courseEntry = user.enrolledCourses.find((c) =>
+      c.courseId.equals(courseId)
+    );
+    if (!courseEntry) {
+      return res.status(404).json({ message: "Course not found in your enrolled list" });
+    }
 
-  if (!courseEntry) {
-    return res.status(404).json({
-      message: "Course not found in your enrolled list",
-    });
-  }
+    const alreadyCompleted = courseEntry.completedVideos.some(
+      (v) => v.key === videoKey
+    );
 
-  // Check if videoKey already exists
-  const alreadyCompleted = courseEntry.completedVideos.some(
-    (v) => v.key === videoKey
-  );
-
-  if (!alreadyCompleted) {
-    // Add to completedVideos
-    courseEntry.completedVideos.push({ key: videoKey });
-  } else {
+    if (!alreadyCompleted) {
+      courseEntry.completedVideos.push({ key: videoKey });
+    } else {
       courseEntry.completedVideos = courseEntry.completedVideos.filter(
         (v) => v.key !== videoKey
       );
+    }
+
+    const completedCount = courseEntry.completedVideos.length;
+    const newProgress = Math.round((completedCount / totalVideos) * 100);
+    const prevProgress = courseEntry.progress || 0;
+    const diff = newProgress - prevProgress;
+
+    courseEntry.progress = newProgress;
+
+    await user.save();
+
+    await Course.findByIdAndUpdate(courseId, {
+      $inc: { totalProgressSum: diff },
+    });
+
+    const updatedCourse = await Course.findById(courseId);
+    const avg = updatedCourse.totalEnrollments > 0
+      ? updatedCourse.totalProgressSum / updatedCourse.totalEnrollments
+      : 0;
+
+    updatedCourse.avgProgress = Number(avg.toFixed(2));
+    await updatedCourse.save();
+
+    res.status(200).json({
+      message: "Progress updated successfully",
+      data: { progress: courseEntry.progress, completedVideos: courseEntry.completedVideos },
+    });
+  } catch (err) {
+    console.error("Update progress failed:", err.message);
+    res.status(500).json({ message: "Server error" });
   }
-
-  // Recalculate progress
-  const completedCount = courseEntry.completedVideos.length;
-  courseEntry.progress = Math.round((completedCount / totalVideos) * 100);
-
-  await user.save();
-  res.status(200).json({
-    message: "Progress updated succesfully",
-    data: { progress: courseEntry.progress, completedVideos:courseEntry.completedVideos},
-  });
 };
+
 
 const getCourseProgress = async (req, res) => {
   try {
