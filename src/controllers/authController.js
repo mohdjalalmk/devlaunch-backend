@@ -148,4 +148,34 @@ const verifyOtp = async (req, res) => {
   }
 };
 
-module.exports = { loginUser, logoutUser, sendOtp, verifyOtp };
+const deleteUser = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(400).json({ message: "No token provided" });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.decode(token);
+
+    // Delete user
+    const deletedUser = await User.findByIdAndDelete(userId)
+    if (!deletedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Add token to blacklist
+    const expiresAt = new Date(decoded.exp * 1000);
+    await TokenBlacklist.create({ token, expiresAt });
+
+    res.status(200).json({ message: "User deleted and logged out successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to delete user" });
+  }
+};
+
+
+module.exports = { loginUser, logoutUser, sendOtp, verifyOtp,deleteUser };
